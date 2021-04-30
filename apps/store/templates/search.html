@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}
+    Search
+{% endblock %}
+
+{% block content %}
+    <h1>Search</h1>
+    <h2>Search term: "{{ query }}"</h2>
+
+    <hr><hr>
+
+    <form class="form" method="GET" action="{% url 'search' %}">
+
+        <div class="row">
+            <div class="col">
+                <h2>Query</h2>
+                <label class="form-label">Search Term</label>
+                <input type="text" name="query" class="form-control mb-5" value="{{ query }}">
+                <div class="form-check">
+                    <label class="form-check-label">In Stock</label>
+                    <input type="checkbox" name="instock" {% if instock %} checked="checked"{% endif %} class="form-check-input">
+                </div>
+            </div>
+
+            <div class="col">
+                <h2>Price range</h2>
+                <label class="form-label">From</label>
+                <input type="number" name="price_from" class="form-control" value="{{ price_from }}">
+                <label class="form-label">To</label>
+                <input type="number" name="price_to" class="form-control" value="{{ price_to }}">
+            </div>
+            <div class="col">
+                <h2>Sorting</h2>
+                <label>Sorting Criteria</label>
+                <select class="form-select" name="sorting">
+                    <option value="-date_added" {% if sorting == '-date_added' %} selected {% endif %}>Newest first</option>
+                    <option value="price" {% if sorting == 'price' %} selected {% endif %}>Price low-high</option>
+                    <option value="-price" {% if sorting == '-price' %} selected {% endif %}>Price high-low</option>
+
+                </select>
+            </div>
+        </div>
+        <div class="row m-5">
+            <button class="btn btn-primary p-3">Search</button>
+        </div>
+
+    </form>
+
+
+   {% with products as list_products %}
+        {% include 'parts/product_list.html' %}
+   {% endwith %}
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}
+    Welcome
+{% endblock %}
+
+{% block content %}
+    <h1>Featured Products</h1>
+    <div class="row">
+    {% with products as list_products %}
+        {% include 'parts/product_list.html' %}
+    {% endwith %}
+    </div>
+
+    <hr>
+
+    <div class="row">
+    {% for category in featured_categories %}
+        <h2>{{ category.title }}</h2>
+        {% with category.products.all|slice:":3" as list_products %}
+            {% include 'parts/product_list.html' %}
+        {% endwith %}
+    {% endfor %}
+    </div>
+
+    <h1>Popular Products</h1>
+    <div class="row">
+    {% with popular_products as list_products %}
+        {% include 'parts/product_list.html' %}
+    {% endwith %}
+    </div>
+
+    <h1>Recently Viewed Products</h1>
+    <div class="row">
+    {% with recently_viewed_products as list_products %}
+        {% include 'parts/product_list.html' %}
+    {% endwith %}
+    </div>
+
+
+{% endblock %}

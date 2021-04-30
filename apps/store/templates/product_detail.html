@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ product.title }}
+{% endblock %}
+
+{% block content %}
+<div id="productapp" class="mt-5">
+<nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'frontpage' %}">Home</a></li>
+          {% if product.category.parent %}
+            <li class="breadcrumb-item active" aria-current="page">
+                <a href="{% url 'category_detail' product.category.parent.slug %}">{{ product.category.parent.title }}</a>
+            </li>
+          {% endif %}
+            <li class="breadcrumb-item" aria-current="page">
+                <a href="{% url 'category_detail' product.category.slug %}">{{ product.category.title }}</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <a href="{% url 'product_detail' product.category.slug product.slug %}">{{ product.title }}</a>
+            </li>
+      </ol>
+    </nav>
+
+    {% if product.image %}
+        <img :src="mainImage">
+        {% if product.images.all %}
+        <hr>
+            <div class="row">
+            <div class="col-2" v-for="image in images">
+                <img width="100" height="100" :src="image.thumbnail" @click="changeMainImage(image.image)">
+            </div>
+            </div>
+        {% endif %}
+    {% endif %}
+    <h1>{{ product.title }}</h1>
+    <span class="display-6">{{ product.price }},</span>
+    {% if product.get_rating == 0 %}
+        No ratings yet!
+    {% else %}
+        <span class="text-success"> Rating:{{ product.get_rating|floatformat:1 }} star</span>
+    {% endif %}
+    {% if product.description %}
+        <p>{{ product.description }}</p>
+    {% endif %}
+
+
+
+    {% if product.variants.all %}
+        <h2>Add to cart</h2>
+        <div class="col-sm-6">
+        <table class="table table-striped">
+            <tbody class="align-middle">
+            <tr>
+            <td>
+                {% if product.thumbnail.url %}
+                    <img width="100" src="{{ product.thumbnail.url }}">
+                {% endif %}
+            </td>
+            <td>
+                <strong>{{ product.title }}</strong>
+            </td>
+            <td>
+                {% if product.in_cart %}
+                    <p>Already in cart!</p>
+                {% else %}
+                    {% if product.num_available > 0 %}
+                        <button class="btn btn-outline-primary" @click="addToCart({{ product.id }})">Add to cart</button>
+                    {% else %}
+                        <p>The Product is out of stock!</p>
+                    {% endif %}
+                {% endif %}
+            </td>
+            </tr>
+            {% for variant in product.variants.all %}
+                <tr>
+                    <td>
+                        {% if variant.thumbnail.url %}
+                            <img width="100" src="{{ variant.thumbnail.url }}">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ variant.title }}</strong>
+                    </td>
+                    <td>
+                        {% if variant.in_cart %}
+                            <p>Already in cart!</p>
+                        {% else %}
+                            {% if variant.num_available > 0 %}
+                                <button class="btn btn-outline-primary" @click="addToCart({{ variant.id }})">Add to cart</button>
+                            {% else %}
+                                <p>The Product is out of stock!</p>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+            </tbody>
+        </table>
+        </div>
+    {% else %}
+        {% if product.in_cart %}
+            <p>Already in cart!</p>
+        {% else %}
+            {% if product.num_available > 0 %}
+                <button class="btn btn-outline-primary" @click="addToCart({{ product.id }})">Add to cart</button>
+            {% else %}
+                <p>The Product is out of stock!</p>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    <div v-if="showMessage">
+        <p class="alert alert-success">Product is added to the to the cart</p>
+    </div>
+    <hr>
+    <h2>Related Products</h2>
+    {% with related_products as list_products %}
+        {% include 'parts/product_list.html' %}
+    {% endwith %}
+    <hr>
+    <h2>Reviews</h2>
+
+        {% for review in product.reviews.all %}
+                <div class="card mb-3">
+                <div class="card-header">
+                    Date: <strong>{{ review.date_added|date:'Y-m-d' }}</strong>,
+                    Stars: <strong>{{ review.stars }}</strong>,
+                </div>
+                <div class="card-body">
+                    {{ review.content }}
+                </div>
+                <div class="card-footer">
+                    {{ review.user }}
+                </div>
+            </div>
+                {% empty %}
+                <div class="card">
+                    <div class="card-body">
+                        No reviews yet!
+                    </div>
+                </div>
+        {% endfor %}
+
+
+    <div class="mt-5">
+        {% if request.user.is_authenticated %}
+        <div class="col-md-8 offset-md-2">
+            <form class="form" method="POST">
+            <h2>Add Review</h2><br>
+            {% csrf_token %}
+                <div class="row">
+                <label class="col-sm-1 form-label" for="stars">Stars</label>
+                    <div class="col-sm-5">
+                        <select id="stars" class="form-select" name="stars">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3 mb-2">
+                    <label class="form-label" for="opinion">Your Opinion:</label>
+                    <textarea id="opinion" class="form-control" name="content" style="height: 200px;"></textarea>
+                </div>
+                <div class="d-grid d-flex justify-content-end">
+                    <button class="col-4 btn btn-success" type="submit">Submit</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <p class="alert alert-warning">Please <a href="{% url 'login' %}">Sign in</a> to add review!</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+    var productapp = new Vue({
+        el: '#productapp',
+        delimeters: ['[[',']]'],
+        store: store,
+        data(){
+            return{
+                showMessage:false,
+                mainImage: '{{ product.image.url }}',
+                images: [{{ imagesstring|safe }}],
+            }
+        },
+        mounted(){
+            console.log('Mounted');
+        },
+        methods: {
+            changeMainImage(image){
+                this.mainImage = image;
+            },
+
+            addToCart(product_id){
+                console.log('product_id:', product_id);
+
+                var data = {
+                    'product_id': product_id,
+                    'update': false,
+                    'quantity':1,
+                };
+
+                fetch('/api/add_to_cart/',{
+                    method: 'POST',
+                    headers:{
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    credentials: 'same-origin',
+
+                    body: JSON.stringify(data)
+                })
+                .then((response) => {
+                    console.log(response);
+
+                    this.showMessage = true;
+
+                    store.commit('increment', 1);
+
+                    setTimeout(()=>{
+                        this.showMessage = false
+                    }, 2000)
+                })
+                .catch(function (error) {
+                    console.log('Error 2');
+                })
+            }
+        },
+    })
+
+
+    </script>
+{% endblock %}

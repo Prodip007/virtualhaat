@@ -1,0 +1,54 @@
+<div class="newsletter-wrapper" id="newsletter-wrapper">
+    <h2>Subscribe to our newsletter.</h2>
+    <div class="d-flex justify-content-center">
+    <form v-on:submit.prevent="onSubmit">
+        <div class="input-group">
+            <input size="50" type="email" v-model="email" class="form-control" placeholder="Your Email Address">
+            <button class="btn btn-danger" type="submit">Submit</button>
+        </div>
+    </form>
+        </div>
+    <div class="alert alert-success mt-3" v-if="showSuccess">
+            This Email is saved!
+        </div>
+</div>
+
+
+<script>
+    var newletterapp = new Vue({
+        el: '#newsletter-wrapper',
+        data(){
+            return {
+                email: '',
+                showSuccess: false,
+            }
+        },
+        methods: {
+            onSubmit(){
+                console.log('onSubmit')
+                fetch('api/add_subscriber', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({'email':this.email})
+                    })
+                        .then((response) => {
+                            return response.json()
+                        })
+                        .then((data) => {
+                            console.log(data);
+                            this.showSuccess = true;
+                            this.email = '';
+                        })
+                        .catch(function (error) {
+                            this.showSuccess = false;
+                            console.log(error);
+                            console.log('Error:', error)
+                        });
+            },
+
+        },
+    })
+</script>
